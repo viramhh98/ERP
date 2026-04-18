@@ -259,3 +259,196 @@ Resulting in a **scalable, flexible, and production-ready ERP SaaS backend archi
 > Limits = how much you can do
 
 This separation ensures clarity, scalability, and maintainability in complex business systems.
+date 18/april/2026
+
+
+## 🔄 Implementation Progress Update (Auth + Git Workflow)
+
+### 🚀 Authentication Layer Implemented
+
+The system now includes a complete **authentication module** built using clean architecture principles.
+
+---
+
+### 🔐 Signup (User Creation)
+
+**Endpoint:**
+
+```
+POST /api/users/signup
+```
+
+**Flow:**
+
+```
+Route → validateSignup → controller → service → DB
+```
+
+**Key Features:**
+
+* Input validation using middleware
+* Password hashing using bcrypt
+* Unique email enforced via MongoDB index
+* Proper error handling (duplicate email - code 11000)
+* Sensitive data (password) excluded from response
+
+---
+
+### 🔐 Login (JWT Authentication)
+
+**Endpoint:**
+
+```
+POST /api/auth/login
+```
+
+**Flow:**
+
+```
+Route → validateLogin → controller → service → DB → JWT
+```
+
+**Key Features:**
+
+* Validates email and password
+* Uses bcrypt.compare for password verification
+* Generates JWT token on successful login
+* Returns:
+
+```json
+{
+  "user": { ...safeUser },
+  "token": "jwt_token"
+}
+```
+
+---
+
+### 🔑 JWT Strategy
+
+* Token is generated during login
+* Token contains:
+
+```js
+{ userId }
+```
+
+* Token expiry: 1 day
+* Stored on client side
+* Sent in headers for protected routes:
+
+```
+Authorization: Bearer <token>
+```
+
+---
+
+### 🧱 Backend Architecture Applied
+
+All features follow strict separation:
+
+```
+Route → Middleware → Controller → Service → Model
+```
+
+| Layer      | Responsibility            |
+| ---------- | ------------------------- |
+| Middleware | validation                |
+| Controller | request/response handling |
+| Service    | business logic            |
+| Model      | database schema           |
+
+---
+
+### ⚠️ Security Measures Implemented
+
+* Password hashing using bcrypt
+* Password never returned in API response
+* Duplicate user prevention using unique index
+* Error handling standardized
+
+---
+
+### 🧪 Testing
+
+* APIs tested using Postman
+* JSON request body used
+* Valid and invalid scenarios tested:
+
+  * missing fields ❌
+  * wrong password ❌
+  * duplicate email ❌
+  * successful login/signup ✅
+
+---
+
+### 🔄 Git Workflow Followed
+
+A proper feature-based workflow is being used:
+
+#### Feature Development
+
+```
+git checkout -b feature/user-create
+git add .
+git commit -m "feat: user signup"
+git push origin feature/user-create
+```
+
+#### Merge Process
+
+```
+git checkout main
+git merge feature/user-create
+git push origin main
+git branch -d feature/user-create
+```
+
+Same flow followed for:
+
+* feature/auth-login
+
+---
+
+### 🧠 Current System Capabilities
+
+The system now supports:
+
+* User creation (signup) ✅
+* Secure login with JWT ✅
+* Clean layered backend architecture ✅
+* Version-controlled development using Git ✅
+
+---
+
+### 🎯 Next Implementation Phase
+
+The next step is to integrate authentication with authorization:
+
+1. **authMiddleware**
+
+   * Verify JWT
+   * Attach user to request
+
+2. **checkPermission Middleware**
+
+   * Validate RBAC rules
+
+3. **checkLimit Middleware**
+
+   * Enforce business constraints (ABAC)
+
+4. **First Business Module**
+
+   * Purchase module (end-to-end flow)
+
+---
+
+### 💡 Updated System Principle
+
+> Authentication = Who you are
+> Authorization = What you can do
+> Limits = How much you can do
+
+This layered approach ensures a secure and scalable ERP system.
+date 19/april/2026

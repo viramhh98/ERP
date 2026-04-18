@@ -18,4 +18,16 @@ router.post('/login',validateLogin,login);
 
 
 
+//test route to verify auth middleware
+const authMiddleware = require("../middleware/auth.middleware.js");
+router.get("/test", authMiddleware, (req, res) => {
+  res.json({
+    message: "You are authorized",
+    user: req.user
+  });
+});
+
+module.exports = router;
+
+
 module.exports=router;
