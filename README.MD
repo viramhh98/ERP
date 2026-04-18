@@ -1,0 +1,261 @@
+### 🧠 SaaS ERP System Architecture (Multi-Tenant + RBAC + Limits)
+
+This system is designed as a **multi-tenant ERP SaaS application**, where multiple companies can use the platform independently, and each company can manage its own users, roles, branches, and business rules.
+
+---
+
+## 🏢 Core Concepts
+
+### 1. Multi-Tenancy (Company-Based Isolation)
+
+Each company represents a **tenant** in the system.
+
+* A single user can belong to multiple companies
+* Each company has its own:
+
+  * roles
+  * users
+  * branches
+  * permissions
+
+This ensures **data isolation and scalability**
+
+---
+
+### 2. Branch-Level Structure
+
+Each company can have multiple branches.
+
+* Roles are defined at **company level**
+* But users can have **different roles in different branches**
+* This is handled via a mapping model
+
+---
+
+## 👤 Models Overview
+
+### 🔹 User
+
+Represents a person using the system.
+
+* Unique by email
+* Can belong to multiple companies
+
+---
+
+### 🔹 Company
+
+Represents an organization (tenant)
+
+* Contains company details (GST, PAN, address)
+* Has multiple owners (users)
+
+---
+
+### 🔹 Branch
+
+Represents a sub-unit of a company
+
+* Linked to a company
+* Used for location-based role assignment
+
+---
+
+### 🔹 Role (Dynamic RBAC)
+
+Defines **what actions a user can perform**
+
+* Stored per company
+* Uses dynamic structure:
+
+```js
+permissions: [
+  {
+    module: "sales",
+    actions: ["create", "read", "approve"]
+  }
+]
+```
+
+This allows:
+
+* Adding new modules without schema change
+* Adding new actions dynamically
+
+---
+
+### 🔹 UserCompanyRole (Core Mapping Model)
+
+This is the **most important model**
+
+It links:
+
+* user
+* company
+* branch
+* role
+* limits
+
+```js
+UserCompanyRole {
+  userId,
+  companyId,
+  branchId (null = all branches),
+  roleId,
+  limits
+}
+```
+
+---
+
+## 🔐 Access Control System
+
+This system uses a **hybrid approach**:
+
+### 1. RBAC (Role-Based Access Control)
+
+Handled via `Role.permissions`
+
+👉 Defines:
+
+> What a user *can do*
+
+Example:
+
+* create sales
+* approve purchase
+
+---
+
+### 2. ABAC (Attribute-Based Control via Limits)
+
+Handled via `limits` in UserCompanyRole
+
+👉 Defines:
+
+> How much a user can do
+
+Example:
+
+```js
+limits: {
+  sales: {
+    maxDiscountPercent: 10
+  },
+  approval: {
+    maxApprovalAmount: 100000
+  }
+}
+```
+
+---
+
+## ⚙️ Request Flow (How system works)
+
+Every API request follows this flow:
+
+### Step 1: Fetch User Role Mapping
+
+```js
+UserCompanyRole.findOne({
+  userId,
+  companyId,
+  $or: [
+    { branchId },
+    { branchId: null }
+  ]
+}).populate("roleId")
+```
+
+---
+
+### Step 2: Check Permission
+
+```js
+checkPermission(role, module, action)
+```
+
+👉 Validates:
+
+* module exists
+* action allowed
+
+---
+
+### Step 3: Check Limits
+
+```js
+checkLimit(userCompanyRole, module, key, value)
+```
+
+👉 Validates:
+
+* numeric constraints (e.g. discount, approval amount)
+
+---
+
+### Step 4: Execute Business Logic
+
+If both checks pass → proceed
+
+---
+
+## 🧩 Key Design Decisions
+
+### ✅ Dynamic Permissions
+
+* No schema change needed for new modules/actions
+* Controlled via backend validation
+
+---
+
+### ✅ Branch-Aware Role Assignment
+
+* `branchId = null` → applies to all branches
+* specific `branchId` → branch-level control
+
+---
+
+### ✅ Separation of Concerns
+
+| Component       | Responsibility       |
+| --------------- | -------------------- |
+| Role            | permissions          |
+| UserCompanyRole | assignment + limits  |
+| Limits          | business constraints |
+| Middleware      | enforcement          |
+
+---
+
+## 🚀 Scalability
+
+This design supports:
+
+* multiple companies
+* multiple branches
+* dynamic roles
+* customizable business rules
+
+Without needing major schema changes
+
+---
+
+## 🧠 Final Summary
+
+This system combines:
+
+* **Multi-tenancy** (Company-based isolation)
+* **RBAC** (permissions via roles)
+* **ABAC** (limits via user-role mapping)
+* **Branch-level flexibility**
+
+Resulting in a **scalable, flexible, and production-ready ERP SaaS backend architecture**
+
+---
+
+### 💡 Core Principle
+
+> Role = what you can do
+> Limits = how much you can do
+
+This separation ensures clarity, scalability, and maintainability in complex business systems.
