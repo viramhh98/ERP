@@ -7,7 +7,12 @@ const connectToDatabase=require('./config/db.config');
 
 // Connect to the database
 connectToDatabase();
+app.use(express.json());
 
+
+// Define routes
+const userRoutes=require('./routes/auth.routes');
+app.use('/api/auth',userRoutes);
 
 
 app.listen(Port,()=>{
