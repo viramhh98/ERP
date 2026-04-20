@@ -1,4 +1,4 @@
-const Branch = require("../modules/branch.model");
+const Branch = require("../models/branch.model");
 
 const createBranch = async ({ name, address, companyId }) => {
   return await Branch.create({

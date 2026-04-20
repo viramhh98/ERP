@@ -513,3 +513,253 @@ Route → authMiddleware → next()
 - Authorization (RBAC/ABAC) is handled in subsequent middleware
 
 date 19/april/20264
+
+
+
+
+## 🔄 Implementation Progress Update (Core ERP Modules + RBAC)
+
+The system has now evolved beyond authentication and includes core ERP modules with a fully functional Role-Based Access Control (RBAC) system built on a multi-tenant architecture.
+
+---
+
+### 🏢 Company Module (Multi-Tenancy Foundation)
+
+This module establishes the foundation of the system by introducing **company-based isolation (tenancy)**.
+
+**Features:**
+
+* Authenticated users can create companies
+* Each company acts as an independent tenant
+* The creator is automatically assigned as the **OWNER**
+* Initializes access control by creating:
+  * Default OWNER role
+  * UserCompanyRole mapping
+
+**Flow:**
+
+Route → authMiddleware → validation → controller → service → DB
+
+**Outcome:**
+
+* Multi-tenant structure established
+* Ownership and access initialized at creation
+
+---
+
+### 🏬 Branch Module (Organizational Structure)
+
+Branches enable **location-based segmentation within a company**, allowing fine-grained access control.
+
+**Features:**
+
+* Create branch under a company
+* Fetch all branches by companyId
+* Supports multiple branches per company
+
+**Key Design Decisions:**
+
+* Each branch is strictly linked to a single company
+* Enables assigning different roles per branch
+
+---
+
+### 🛡️ Role Module (Dynamic RBAC System)
+
+Roles define **what actions a user can perform** within a company.
+
+**Features:**
+
+* Create roles dynamically per company
+* Fetch roles by companyId
+* Supports flexible permission structure
+
+**Permissions Structure:**
+
+permissions: [
+  {
+    module: "sales",
+    actions: ["create", "read", "update"]
+  }
+]
+
+**Validation:**
+
+* Only predefined modules are allowed (sales, purchase, inventory, etc.)
+* Only predefined actions are allowed (create, read, update, etc.)
+* Prevents invalid or malicious permission injection
+
+**Design Benefit:**
+
+* No schema change required for new modules/actions
+* Fully dynamic and scalable permission system
+
+---
+
+### 👨‍💼 Employee Module (User + Role Assignment)
+
+This module connects users with companies, branches, and roles — forming the **core access control system**.
+
+**Features:**
+
+* Create new user OR reuse existing user (based on email)
+* Assign multiple roles across multiple branches
+* Supports different roles per branch
+
+**Request Structure:**
+
+{
+  "name": "Rahul Sharma",
+  "email": "rahul@gmail.com",
+  "password": "123456",
+  "companyId": "...",
+  "assignments": [
+    {
+      "branchId": "...",
+      "roleId": "..."
+    },
+    {
+      "branchId": "...",
+      "roleId": "..."
+    }
+  ]
+}
+
+**Key Capabilities:**
+
+* One user → multiple companies
+* One user → multiple branches
+* One user → different roles per branch
+
+---
+
+### 🔗 UserCompanyRole (Core Mapping Model)
+
+This is the **most critical model** in the system.
+
+It defines the relationship:
+
+User ↔ Company ↔ Branch ↔ Role ↔ Limits
+
+**Enhancements:**
+
+* One document per unique combination:
+  * userId
+  * companyId
+  * branchId
+  * roleId
+* Supports unlimited role assignments
+
+**Outcome:**
+
+* Highly flexible RBAC system
+* Enables branch-level authorization
+
+---
+
+### ⚡ Bulk Role Assignment Optimization
+
+To improve performance and scalability:
+
+* Uses `insertMany()` for bulk insertion
+* Handles duplicate entries gracefully
+
+**Implementation Detail:**
+
+{ ordered: false }
+
+**Benefits:**
+
+* Faster than loop-based inserts
+* Prevents failure due to duplicate entries
+* Suitable for large-scale systems
+
+---
+
+### 🔐 Business Validation (Data Integrity & Security)
+
+Critical validations are implemented at the service layer to ensure **data consistency and tenant isolation**.
+
+#### Role Validation
+
+Ensures that assigned roles belong to the same company:
+
+Role.find({ _id: { $in: roleIds }, companyId })
+
+#### Input Normalization
+
+Handles duplicate roleIds before validation:
+
+const roleIds = [...new Set(assignments.map(a => a.roleId))];
+
+**Why Important:**
+
+* Prevents cross-company role assignment
+* Avoids incorrect validation failures
+* Ensures strict data isolation
+
+---
+
+### 🧱 Architecture Improvements
+
+The system strictly follows clean architecture principles:
+
+| Layer      | Responsibility            |
+|------------|--------------------------|
+| Middleware | Validation               |
+| Controller | Request/Response Handling|
+| Service    | Business Logic           |
+| Model      | Database Schema          |
+
+**Benefits:**
+
+* Maintainable codebase
+* Scalable system design
+* Clear separation of concerns
+
+---
+
+### 🧠 Current System Capabilities
+
+The system now supports:
+
+* Multi-tenant company structure ✅  
+* Branch-level organization ✅  
+* Dynamic role-based access control (RBAC) ✅  
+* Multi-branch role assignment per user ✅  
+* Employee management system ✅  
+* Secure and validated data flow ✅  
+* Business-level validation for consistency ✅  
+
+---
+
+### 🎯 Next Implementation Phase
+
+The next phase focuses on **runtime authorization**:
+
+1. loadUserContext Middleware  
+   * Fetch role based on company + branch  
+   * Attach permissions and limits to request  
+
+2. checkPermission Middleware  
+   * Validate if user can perform specific actions  
+
+3. checkLimit Middleware  
+   * Enforce business constraints (ABAC)  
+
+---
+
+### 💡 Updated System Principle
+
+Authentication = Who you are  
+Authorization = What you can do  
+Context = Where you belong (company + branch)  
+Limits = How much you can do  
+
+This layered design ensures a scalable, secure, and production-ready ERP SaaS system.
+
+
+
+
+
+

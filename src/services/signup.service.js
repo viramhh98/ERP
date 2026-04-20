@@ -1,4 +1,4 @@
-const User = require("../modules/user.model.js");
+const User = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
 
 async function signupService(data) {

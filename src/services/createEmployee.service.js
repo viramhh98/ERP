@@ -1,7 +1,7 @@
-const User = require("../modules/user.model");
-const UserCompanyRole = require("../modules/userCompanyRole.model");
+const User = require("../models/user.model");
+const UserCompanyRole = require("../models/userCompanyRole.model");
 const bcrypt = require("bcrypt");
-const Role = require("../modules/role.model");
+const Role = require("../models/role.model");
 
 const createEmployee = async (data) => {
   const { name, email, password, companyId, assignments } = data;

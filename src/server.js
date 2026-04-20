@@ -38,6 +38,11 @@ app.use('/api/branch',branchRoutes);
 const employeeRoutes=require('./routes/employee.routes');
 app.use('/api/employee',employeeRoutes);
 
+// Party routes
+const partyRoutes=require('./routes/party.routes');
+app.use('/api/party',partyRoutes);
+
+
 app.listen(Port,()=>{
     console.log(`Server is running on port ${Port}`);
 })

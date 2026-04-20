@@ -1,6 +1,6 @@
-const Company = require("../modules/company.model");
-const Role = require("../modules/role.model");
-const UserCompanyRole = require("../modules/userCompanyRole.model");
+const Company = require("../models/company.model");
+const Role = require("../models/role.model");
+const UserCompanyRole = require("../models/userCompanyRole.model");
 
 const createCompany = async (data, userId) => {
   // 1. Create company

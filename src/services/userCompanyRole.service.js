@@ -1,4 +1,4 @@
-const UserCompanyRole = require("../modules/userCompanyRole.model");
+const UserCompanyRole = require("../models/userCompanyRole.model");
 
 const getUserRoleContext = async ({ userId, companyId, branchId }) => {
   // 1. Try branch-specific role

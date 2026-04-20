@@ -24,7 +24,7 @@ const createRole = async (req, res) => {
 };
 
 
-const Role = require("../modules/role.model");
+const Role = require("../models/role.model");
 
 const getRolesByCompany = async (req, res) => {
   try {
