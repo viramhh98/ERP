@@ -13,7 +13,6 @@ const CompanySchema = new mongoose.Schema(
     gstNumber: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -38,7 +37,6 @@ const CompanySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-CompanySchema.index({ gstNumber: 1 }, { unique: true });
 
 const Company = mongoose.model("Company", CompanySchema);
 

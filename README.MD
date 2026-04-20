@@ -451,4 +451,65 @@ The next step is to integrate authentication with authorization:
 > Limits = How much you can do
 
 This layered approach ensures a secure and scalable ERP system.
-date 19/april/2026
+
+### 🔐 Auth Middleware (JWT Protection)
+
+This middleware is responsible for securing protected API routes by verifying JWT tokens and identifying the authenticated user.
+
+---
+
+### 📌 Purpose
+
+- Ensures only authenticated users can access protected endpoints
+- Extracts user identity from JWT
+- Attaches user information to the request for further authorization
+
+---
+
+### ⚙️ How It Works
+
+1. Reads token from request header:
+
+   Authorization: Bearer <token>
+
+2. Verifies token using JWT secret
+
+3. Extracts payload:
+
+   { userId }
+
+4. Attaches user to request:
+
+   req.user = { userId }
+
+5. Passes control to next middleware
+
+---
+
+### ❌ Failure Cases
+
+- Missing token → 401 Unauthorized
+- Invalid token → 401 Unauthorized
+- Expired token → 401 Unauthorized
+
+---
+
+### 📁 Location
+
+middlewares/auth.middleware.js
+
+---
+
+### 🔄 Request Flow
+
+Route → authMiddleware → next()
+
+---
+
+### 💡 Notes
+
+- This middleware does NOT query the database (kept lightweight)
+- Handles only authentication (not authorization)
+- Authorization (RBAC/ABAC) is handled in subsequent middleware
+
+date 19/april/20264
