@@ -46,6 +46,17 @@ app.use('/api/party',partyRoutes);
 const itemRoutes=require('./routes/item.routes');
 app.use('/api/item',itemRoutes);
 
+// Stock routes
+const stockRoutes=require('./routes/stock.routes');
+app.use('/api/stock',stockRoutes);
+
+// Purchase routes
+const purchaseRoutes=require('./routes/purchase.route');
+app.use('/api/purchase',purchaseRoutes);
+
+// Sales routes
+const salesRoutes=require('./routes/sales.routes');
+app.use('/api/sales',salesRoutes);
 
 app.listen(Port,()=>{
     console.log(`Server is running on port ${Port}`);

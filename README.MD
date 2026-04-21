@@ -885,3 +885,513 @@ Balance = Derived value
 
 
 
+## 🔄 Implementation Progress Update (Item Module - Product Master)
+
+### 📦 Item Module (Product Management)
+
+The system now includes a core **Item module** which acts as the **product master** for the ERP system.
+
+---
+
+### 📌 Concept
+
+- Items are maintained at **company level (tenant-level)**
+- Same item can be used across multiple branches
+- Each item is uniquely identified using a **SKU (Stock Keeping Unit)**
+
+---
+
+### ⚙️ Features
+
+- Create item
+- Fetch all items by company
+- SKU-based uniqueness per company
+- Multi-tenant support using company context
+
+---
+
+### 🧱 Model Design
+
+Each item contains:
+
+- name  
+- sku (unique per company)  
+- unit (pcs, kg, liter, etc.)  
+- sellingPrice (default UI price)  
+- costPrice (last purchase price)  
+- companyId  
+- isActive flag  
+
+---
+
+### 🔐 Data Integrity
+
+- SKU is enforced as **unique per company**
+- Prevents duplicate product entries within the same tenant
+- Same SKU can exist across different companies (multi-tenant safe)
+
+---
+
+### 🧠 Design Decisions
+
+- Item is a **company-level entity (not branch-specific)**
+- Stock is handled separately per branch
+- Price is **NOT derived from item during transactions**
+- Actual transaction price is stored in:
+  - Purchase
+  - Sale
+
+---
+
+### 🔒 Multi-Tenant Handling (Company Context)
+
+The system uses a **dynamic company context approach**:
+
+- JWT → identifies user (`userId`)
+- Request Header → provides active company (`activecompanyid`)
+
+
+
+
+
+
+
+---
+
+### ⚙️ Middleware Flow
+
+Route → authMiddleware → activeCompanyMiddleware → controller → service → DB
+
+---
+
+### 🧩 Middleware Responsibilities
+
+| Middleware               | Responsibility                    |
+|------------------------|----------------------------------|
+| authMiddleware         | Authenticate user (JWT)           |
+| activeCompanyMiddleware| Attach active company to request  |
+
+---
+
+### ⚠️ Edge Case Handling
+
+- User may not have any company (valid state)
+- Business APIs require company via middleware
+- Auth and onboarding APIs do not require company
+
+---
+
+### 🧠 Current Capabilities
+
+- Product master management (Item module) ✅  
+- Multi-tenant item isolation ✅  
+- SKU-based uniqueness per company ✅  
+- Clean architecture (controller/service separation) ✅  
+- Middleware-based company context handling ✅  
+
+---
+
+### 🎯 Next Implementation Phase
+
+1. Stock Module  
+   - Maintain branch-wise inventory  
+
+2. StockTransaction Module  
+   - Track stock movement (IN/OUT)  
+
+3. Purchase Module  
+   - Create purchase entries  
+   - Increase stock  
+   - Create ledger entry  
+
+4. Sale Module  
+   - Reduce stock  
+   - Generate revenue entries  
+
+---
+
+### 💡 Updated System Principle
+
+Item = What is being sold  
+Stock = Where it is stored  
+Transaction = When it moves  
+Ledger = Money flow  
+
+
+
+
+
+
+
+
+
+
+## 🔄 Implementation Progress Update (Inventory + Accounting Core Engine)
+
+The system has now evolved into a **fully functional ERP backend MVP**, integrating inventory management with accounting in a transaction-safe, multi-tenant architecture.
+
+This phase marks the transition from foundational modules (Auth, RBAC, Party, Item) to **core business operations**, enabling real-world transactional workflows.
+
+---
+
+# 🧠 Overview of This Phase
+
+This implementation introduces the **core ERP engine**, which handles:
+
+- Inventory tracking (Stock)
+- Stock movement auditing (StockTransaction)
+- Purchase workflow (Stock Inflow)
+- Sale workflow (Stock Outflow)
+- Financial tracking (Ledger)
+
+All modules are tightly integrated using a **transaction-safe service layer**, ensuring data consistency and reliability.
+
+---
+
+# 📦 Stock Module (Branch-Level Inventory Management)
+
+## 📌 Concept
+
+Stock represents the **quantity of items available at a specific branch**.
+
+- Stock is maintained at:
+  - itemId
+  - companyId
+  - branchId
+- Each combination has a **single unique record**
+- Quantity is always non-negative
+
+---
+
+## ⚙️ Features
+
+- Fetch stock by item + branch
+- Automatic stock creation during transactions
+- Prevent negative stock using validation logic
+
+---
+
+## 🧠 Design Decisions
+
+- Stock is NOT manually created via API
+- Stock is automatically created when:
+  - Purchase occurs
+  - Opening stock is introduced
+- Avoids unnecessary empty records and keeps system clean
+
+---
+
+## 🔐 Data Integrity
+
+- Unique compound index ensures no duplicate stock entries
+- Quantity cannot go below zero
+- All updates go through service layer (no direct DB writes)
+
+---
+
+# 🔄 StockTransaction Module (Inventory Audit System)
+
+## 📌 Concept
+
+StockTransaction acts as a **complete audit log for all inventory movements**.
+
+Every change in stock is recorded with:
+
+- type: IN / OUT
+- quantity
+- referenceType
+- referenceId
+
+---
+
+## ⚙️ Features
+
+- Tracks all stock movements:
+  - Purchase → IN
+  - Sale → OUT
+  - Future: returns, transfers, adjustments
+- Enables traceability and debugging
+- Links every transaction to its source
+
+---
+
+## 🧠 Design Decisions
+
+- No public API for stock transactions
+- Created internally via business flows only
+- Prevents unauthorized stock manipulation
+
+---
+
+## 💡 Importance
+
+Without StockTransaction:
+
+- No audit trail ❌
+- No debugging capability ❌
+- No historical tracking ❌
+
+---
+
+# 🛒 Purchase Module (Inventory Inflow)
+
+## 📌 Flow
+
+Create Purchase  
+→ Increase Stock  
+→ Create StockTransaction (IN)  
+→ Create Ledger Entry (CREDIT)  
+
+---
+
+## ⚙️ Features
+
+- Multi-item purchase support
+- Automatic stock increment
+- Ledger entry for supplier liability
+- Transaction-safe execution using MongoDB sessions
+
+---
+
+## 🧠 Business Logic
+
+- Backend calculates:
+  - item.total = quantity × price
+  - totalAmount = sum of all items
+- Prevents manipulation from frontend
+- Ensures financial accuracy
+
+---
+
+## 🔐 Data Integrity
+
+- Validates:
+  - party exists
+  - items exist
+- Uses transactions:
+  - rollback on failure
+  - prevents partial updates
+
+---
+
+# 💰 Ledger Module (Accounting Engine)
+
+## 📌 Concept
+
+Ledger records all **financial transactions** in the system.
+
+Each entry contains:
+
+- partyId
+- type (DEBIT / CREDIT)
+- amount
+- referenceType
+- referenceId
+
+---
+
+## ⚙️ Features
+
+- Tracks all monetary movements
+- Linked with purchase and sale
+- Enables balance calculation (derived, not stored)
+
+---
+
+## 🧠 Accounting Rules
+
+| Action   | Ledger Entry |
+|----------|-------------|
+| Purchase | CREDIT      |
+| Sale     | DEBIT       |
+| Payment  | DEBIT       |
+| Receipt  | CREDIT      |
+
+---
+
+## ⚠️ Design Rule
+
+Ledger is **append-only**:
+
+- No updates ❌
+- No deletes ❌
+- Only inserts ✅
+
+---
+
+# 🧾 Sale Module (Inventory Outflow)
+
+## 📌 Flow
+
+Create Sale  
+→ Validate stock availability  
+→ Decrease Stock  
+→ Create StockTransaction (OUT)  
+→ Create Ledger Entry (DEBIT)  
+
+---
+
+## ⚙️ Features
+
+- Prevents overselling using stock validation
+- Multi-item sale support
+- Automatic stock deduction
+- Transaction-safe execution
+
+---
+
+## 🧠 Key Logic
+
+- Validates stock before sale
+- Throws error if insufficient stock
+- Ensures inventory consistency
+
+---
+
+# 🔐 Transaction Management (Critical System Design)
+
+All business operations use **MongoDB transactions (sessions)**:
+
+## Benefits:
+
+- Atomic operations
+- Rollback on failure
+- Prevents partial updates
+
+---
+
+## Example Failure Handling
+
+If any step fails:
+
+- Purchase not saved ❌  
+- Stock not updated ❌  
+- Ledger not created ❌  
+
+👉 Entire operation is rolled back
+
+---
+
+# 🧠 System-Wide Design Principles
+
+---
+
+## 1. Never Trust Frontend
+
+- All totals calculated on backend
+- Prevents manipulation and fraud
+
+---
+
+## 2. Service Layer as Single Source of Truth
+
+All business logic is centralized:
+
+- stockService
+- purchaseService
+- saleService
+- ledgerService
+
+---
+
+## 3. Reference-Based Linking
+
+Every transaction is linked using:
+
+- referenceType
+- referenceId
+
+Enables:
+
+- audit trails
+- reporting
+- debugging
+
+---
+
+## 4. Multi-Tenant Isolation
+
+All data is scoped by:
+
+- companyId
+- branchId
+
+Ensures strict tenant separation
+
+---
+
+# 🧠 Current System Capabilities
+
+The system now supports:
+
+- Product management (Item module) ✅  
+- Branch-wise inventory tracking (Stock) ✅  
+- Inventory audit logging (StockTransaction) ✅  
+- Purchase flow (stock IN + ledger CREDIT) ✅  
+- Sale flow (stock OUT + ledger DEBIT) ✅  
+- Financial tracking via ledger ✅  
+- Transaction-safe operations (rollback support) ✅  
+- Strong validation and data integrity ✅  
+- Multi-tenant + multi-branch architecture ✅  
+
+---
+
+# 🎯 Next Implementation Phase
+
+The next phase will focus on completing the financial system and improving usability:
+
+---
+
+## 1. Payment & Receipt Module
+
+- Record actual money transactions
+- Settle outstanding balances
+
+---
+
+## 2. Balance Calculation
+
+- Compute dynamically from ledger entries
+- No balance stored in DB
+
+---
+
+## 3. Reporting System
+
+- Sales reports
+- Purchase reports
+- Stock reports
+- Ledger summaries
+
+---
+
+## 4. Advanced Features (Future)
+
+- Discount handling
+- Invoice numbering system
+- Batch management
+- GST / tax calculations
+
+---
+
+# 💡 Updated System Principle
+
+Item = What is being sold  
+Stock = Where it is stored  
+StockTransaction = How it moves  
+Purchase = Stock inflow  
+Sale = Stock outflow  
+Ledger = Money flow  
+Balance = Derived value  
+
+---
+
+# 🚀 System Status
+
+The backend now represents a **complete ERP MVP engine**, capable of handling:
+
+- inventory management  
+- transaction processing  
+- financial tracking  
+
+with a clean, scalable, and production-ready architecture.

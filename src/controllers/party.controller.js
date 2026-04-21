@@ -40,7 +40,6 @@ const getParties = async (req, res) => {
 
 const getPartyByPhone = async (req, res) => {
   try {
-    // console.log("Query params:", req.query);
     const { phone, companyId } = req.query;
 
 

@@ -597,19 +597,6 @@ module.exports = mongoose.model("Ledger", ledgerSchema);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 const mongoose = require("mongoose");
 
 
@@ -632,8 +619,8 @@ const itemSchema = new mongoose.Schema({
     required: true
   },
 
-  sellingPrice: { type: Number, default: 0, min: 0 },
-  costPrice: { type: Number, default: 0, min: 0 }, // optional (last purchase)
+  sellingPrice: { type: Number, default: 0, min: 0 }, // UI default
+  costPrice: { type: Number, default: 0, min: 0 },   // last purchase price
 
   companyId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -641,9 +628,6 @@ const itemSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-
-  category: String,
-  taxRate: { type: Number, default: 0 },
 
   isActive: { type: Boolean, default: true }
 
@@ -653,8 +637,67 @@ itemSchema.index({ sku: 1, companyId: 1 }, { unique: true });
 itemSchema.index({ name: "text", sku: "text" });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // =======================
-// 2. STOCK (SUMMARY)
+// 2. STOCK (BRANCH-WISE)
 // =======================
 const stockSchema = new mongoose.Schema({
   itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
@@ -674,45 +717,7 @@ stockSchema.index(
 
 
 // =======================
-// 3. STOCK BATCH (🔥 CORE)
-// =======================
-const stockBatchSchema = new mongoose.Schema({
-  itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
-
-  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
-
-  branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
-
-  quantityRemaining: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-
-  purchasePrice: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-
-  referenceType: {
-    type: String,
-    enum: ["PURCHASE", "OPENING"],
-    required: true
-  },
-
-  referenceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  }
-
-}, { timestamps: true });
-
-stockBatchSchema.index({ itemId: 1, branchId: 1 });
-
-
-// =======================
-// 4. STOCK TRANSACTION
+// 3. STOCK TRANSACTION (AUDIT)
 // =======================
 const stockTransactionSchema = new mongoose.Schema({
   itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
@@ -758,7 +763,7 @@ stockTransactionSchema.index({ itemId: 1, companyId: 1 });
 
 
 // =======================
-// 5. PURCHASE
+// 4. PURCHASE
 // =======================
 const purchaseSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
@@ -797,7 +802,7 @@ const purchaseSchema = new mongoose.Schema({
 
 
 // =======================
-// 6. SALE
+// 5. SALE
 // =======================
 const saleSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
@@ -836,7 +841,7 @@ const saleSchema = new mongoose.Schema({
 
 
 // =======================
-// 7. LEDGER
+// 6. LEDGER (MONEY FLOW)
 // =======================
 const ledgerSchema = new mongoose.Schema({
   partyId: { type: mongoose.Schema.Types.ObjectId, ref: "Party", required: true },
@@ -877,9 +882,18 @@ ledgerSchema.index({ partyId: 1, companyId: 1 });
 module.exports = {
   Item: mongoose.model("Item", itemSchema),
   Stock: mongoose.model("Stock", stockSchema),
-  StockBatch: mongoose.model("StockBatch", stockBatchSchema),
   StockTransaction: mongoose.model("StockTransaction", stockTransactionSchema),
   Purchase: mongoose.model("Purchase", purchaseSchema),
   Sale: mongoose.model("Sale", saleSchema),
   Ledger: mongoose.model("Ledger", ledgerSchema)
 };
+
+
+
+
+
+
+
+
+
+

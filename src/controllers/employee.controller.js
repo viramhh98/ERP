@@ -2,10 +2,8 @@ const employeeService = require("../services/createEmployee.service");
 
 const createEmployee = async (req, res) => {
   try {
-    console.log("Request body:", req.body); // Debugging log
     const result = await employeeService.createEmployee(req.body);
-
-
+    
     res.status(201).json({
       message: "Employee created successfully",
       data: result
