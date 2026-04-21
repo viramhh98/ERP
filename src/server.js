@@ -42,6 +42,10 @@ app.use('/api/employee',employeeRoutes);
 const partyRoutes=require('./routes/party.routes');
 app.use('/api/party',partyRoutes);
 
+// Item routes
+const itemRoutes=require('./routes/item.routes');
+app.use('/api/item',itemRoutes);
+
 
 app.listen(Port,()=>{
     console.log(`Server is running on port ${Port}`);

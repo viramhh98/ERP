@@ -759,6 +759,128 @@ Limits = How much you can do
 This layered design ensures a scalable, secure, and production-ready ERP SaaS system.
 
 
+## 🔄 Implementation Progress Update (Party Module - Customer & Supplier Management)
+
+### 👥 Party Module (Customer & Supplier)
+
+The system now includes a unified **Party module** to manage both customers and suppliers.
+
+---
+
+### 📌 Concept
+
+Instead of separate models for customers and suppliers, a single **Party model** is used with a `type` field:
+
+* customer
+* supplier
+* both
+
+This allows flexible and scalable management of business entities.
+
+---
+
+### ⚙️ Features
+
+* Create party (customer/supplier/both)
+* Fetch all parties by company
+* Filter parties by type (customer or supplier)
+* Search party by mobile number
+* Multi-tenant support using companyId
+
+---
+
+### 🧱 Model Design
+
+Each party contains:
+
+* name
+* type (customer | supplier | both)
+* phone (unique per company)
+* email (optional)
+* address
+* companyId
+
+---
+
+### 🔐 Data Integrity
+
+* Phone number is enforced as **unique per company**
+* Prevents duplicate party creation within the same tenant
+* Supports same phone across different companies (multi-tenant safe)
+
+---
+
+### 🔍 Search Functionality
+
+Implemented fast lookup using mobile number:
+
+GET /api/parties/search?phone=9876543210&companyId=...
+
+**Key Points:**
+
+* Optimized for billing and quick lookup
+* Always scoped by companyId to ensure data isolation
+
+---
+
+### 🧠 Design Decisions
+
+* Party is a **company-level entity** (not branch-specific)
+* Same party can be used across multiple branches
+* Avoids duplication and ensures centralized data
+
+---
+
+### 🚫 Why No Balance in Party?
+
+Balance is NOT stored in Party.
+
+Instead:
+
+* All transactions will be stored in **Ledger**
+* Balance will be calculated dynamically
+
+This ensures:
+
+* Accurate financial tracking
+* Full transaction history
+* Auditability
+
+---
+
+### 🧠 Current Capabilities
+
+The system now supports:
+
+* Customer and supplier management in single model ✅  
+* Multi-tenant party isolation ✅  
+* Unique identification using phone number ✅  
+* Fast search by mobile number ✅  
+* Clean and scalable entity design ✅  
+
+---
+
+### 🎯 Next Implementation Phase
+
+1. **Ledger Module**
+   * Track debit/credit transactions
+   * Manage credit system
+
+2. **Balance Calculation**
+   * Compute from ledger entries
+
+3. **Integration**
+   * Connect with sales and purchase modules
+
+---
+
+### 💡 Updated System Principle
+
+Party = Who (customer/supplier)  
+Branch = Where transaction happens  
+Ledger = Money flow  
+Balance = Derived value  
+
 
 
 
