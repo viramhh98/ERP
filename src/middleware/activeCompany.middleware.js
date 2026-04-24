@@ -3,7 +3,7 @@ const activeCompany = (req, res, next) => {
 
   req.user = {
     ...req.user,
-    activeCompanyId: companyId || null
+    activeCompanyId: companyId
   };
 
   next();

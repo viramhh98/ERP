@@ -33,4 +33,36 @@ const createCompany = async (data, userId) => {
   return company;
 };
 
-module.exports = { createCompany };
+const getCompanies = async (userId) => {
+  // Find all company roles for the user
+  const userRoles = await UserCompanyRole.find({ userId }).populate('companyId');
+  // Extract unique companies
+  const companies = userRoles.map(ur => ur.companyId);
+  return companies;
+}
+
+
+const updateCompany = async (companyId, userId, data) => {
+  // Check if user has permission to update company (e.g., is OWNER)
+  const userRole = await UserCompanyRole.findOne({ userId, companyId }).populate('roleId');
+  if (!userRole || userRole.roleId.name !== "OWNER") {
+    throw new Error("Unauthorized");
+  }
+  // Update company
+  const company = await Company.findByIdAndUpdate(companyId, data, { new: true });
+  return company;
+};
+
+const deleteCompany = async (companyId, userId) => {
+  // Check if user has permission to delete company (e.g., is OWNER)
+  const userRole = await UserCompanyRole.findOne({ userId, companyId }).populate('roleId');
+  if (!userRole || userRole.roleId.name !== "OWNER") {
+    throw new Error("Unauthorized");
+  }
+  // Delete company
+  await Company.findByIdAndDelete(companyId);
+
+};
+
+
+module.exports = { createCompany, getCompanies, updateCompany, deleteCompany };

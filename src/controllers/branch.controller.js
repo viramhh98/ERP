@@ -3,19 +3,23 @@ const branchService = require("../services/branch.service");
 const createBranch = async (req, res) => {
   try {
     const { name, address } = req.body;
-    const { companyId } = req.params;
-
+    
+    // Service ko call karein aur destructured data pass karein
     const branch = await branchService.createBranch({
       name,
       address,
-      companyId
+      userId: req.user.userId,
+      activeCompanyId: req.user.activeCompanyId,
+      activeBranchId: req.user.activeBranchId
     });
 
-    res.status(201).json(branch);
+    return res.status(201).json(branch);
   } catch (error) {
-    res.status(500).json({ message: "Error creating branch" });
+    console.error(error); // Console mein check karein exact error kya hai
+    return res.status(500).json({ message: error.message || "Error creating branch" });
   }
 };
+
 
 const getBranches = async (req, res) => {
   try {
@@ -31,5 +35,5 @@ const getBranches = async (req, res) => {
 
 module.exports = {
   createBranch,
-  getBranches
+  getBranches,
 };

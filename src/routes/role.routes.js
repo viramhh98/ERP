@@ -4,20 +4,24 @@ const router = express.Router();
 const authMiddleware = require("../middleware/auth.middleware");
 const roleController = require("../controllers/role.controller");
 const validateRole = require("../middleware/validateRole.middleware");
-
+const activeCompanyMiddleware = require("../middleware/activeCompany.middleware");
+const checkPermission = require("../middleware/checkPermission.middleware");
 // create role for a company
 router.post(
-  "/:companyId",
+  "/",
   authMiddleware,
   validateRole.validateCreateRole,
+  activeCompanyMiddleware,
+  checkPermission("RoleManagement","create"),
   roleController.createRole
 );
 
 
 // get all roles for a company
 router.get(
-  "/:companyId",
+  "/",
   authMiddleware,
+  activeCompanyMiddleware,
   roleController.getRolesByCompany
 );
 

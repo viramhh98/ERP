@@ -43,7 +43,6 @@ const validateCreateSale = async (req, res, next) => {
     next();
 
   } catch (error) {
-    console.error("Error validating sale:", error);
     res.status(500).json({ message: "Validation error" });
   }
 };

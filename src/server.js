@@ -1,6 +1,10 @@
 const dns=require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
+
+const cors = require("cors");
+
+
 const express=require('express');
 const {Port}=require('./config/env.config');
 const app=express();
@@ -11,6 +15,7 @@ const connectToDatabase=require('./config/db.config');
 // Connect to the database
 connectToDatabase();
 app.use(express.json());
+app.use(cors());
 
 
 // Define routes

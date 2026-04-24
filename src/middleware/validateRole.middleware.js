@@ -1,9 +1,13 @@
 const ALLOWED_MODULES = [
+  "all", // 🔥 Added for Super Admin/Owner support
+  "dashboard",
   "sales",
   "purchase",
   "inventory",
   "finance",
-  "userManagement"
+  "users", // Consistent with your Sidebar names
+  "branchmanagement",
+  "settings"
 ];
 
 const ALLOWED_ACTIONS = [
@@ -14,33 +18,43 @@ const ALLOWED_ACTIONS = [
   "approve",
   "discount",
   "refund",
-  "report"
+  "report",
+  "print"
 ];
 
 const validateCreateRole = (req, res, next) => {
   const { name, permissions } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ message: "Role name is required" });
+  // 1. Basic Name Check
+  if (!name || typeof name !== 'string' || name.trim() === "") {
+    return res.status(400).json({ message: "A valid Role name is required" });
   }
 
-  if (!permissions || !Array.isArray(permissions)) {
-    return res.status(400).json({ message: "Permissions must be an array" });
+  // 2. Permissions Array Check
+  if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+    return res.status(400).json({ message: "At least one module permission is required" });
   }
 
+  // 3. Deep Validation
   for (const perm of permissions) {
-    // check module
+    // Check if module exists
     if (!ALLOWED_MODULES.includes(perm.module)) {
       return res.status(400).json({
-        message: `Invalid module: ${perm.module}`
+        message: `Invalid module: ${perm.module}. Allowed: ${ALLOWED_MODULES.join(", ")}`
       });
     }
 
-    // check actions
+    // Check if actions array exists and is valid
+    if (!perm.actions || !Array.isArray(perm.actions) || perm.actions.length === 0) {
+      return res.status(400).json({
+        message: `At least one action is required for module: ${perm.module}`
+      });
+    }
+
     for (const action of perm.actions) {
       if (!ALLOWED_ACTIONS.includes(action)) {
         return res.status(400).json({
-          message: `Invalid action: ${action}`
+          message: `Invalid action: '${action}' in module '${perm.module}'`
         });
       }
     }
@@ -49,6 +63,4 @@ const validateCreateRole = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  validateCreateRole
-};
+module.exports = { validateCreateRole };

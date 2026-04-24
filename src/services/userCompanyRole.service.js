@@ -20,4 +20,8 @@ const getUserRoleContext = async ({ userId, companyId, branchId }) => {
   return userRole;
 };
 
-module.exports =getUserRoleContext;
+const getallCompanyBranchesService = async ({userId})=>{
+  const allcompanyBranches=await UserCompanyRole.find({userId}).populate("companyId");
+  return allcompanyBranches;
+};
+module.exports ={getUserRoleContext,getallCompanyBranchesService};

@@ -13,7 +13,6 @@ async function loginService({ email, password }) {
 
   // 2. compare password
   const isMatch = await bcrypt.compare(password, user.password);
-
   if (!isMatch) {
     throw new Error("Invalid credentials");
   }

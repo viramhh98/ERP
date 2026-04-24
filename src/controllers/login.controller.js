@@ -3,7 +3,6 @@ const loginService = require("../services/login.service");
 const login = async (req, res) => {
   try {
     const { user, token } = await loginService(req.body);
-
     // remove password before sending
     const { password, ...safeUser } = user.toObject();
 

@@ -2,7 +2,7 @@ const Role = require("../models/role.model");
 
 const createRole = async ({ name, permissions, companyId }) => {
   const role = await Role.create({
-    name,
+    name:name.toUpperCase(),
     permissions,
     companyId
   });

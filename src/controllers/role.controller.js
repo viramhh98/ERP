@@ -3,8 +3,7 @@ const roleService = require("../services/role.service");
 const createRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
-    const { companyId } = req.params;
-
+    const  companyId  = req.user.activeCompanyId;
     const role = await roleService.createRole({
       name,
       permissions,
@@ -28,9 +27,9 @@ const Role = require("../models/role.model");
 
 const getRolesByCompany = async (req, res) => {
   try {
-    const { companyId } = req.params;
 
-    const roles = await Role.find({ companyId });
+    const activeCompanyId= req.user.activeCompanyId;
+    const roles = await Role.find({ companyId: activeCompanyId });
 
     res.json(roles);
   } catch (error) {
